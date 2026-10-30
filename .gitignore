@@ -6,3 +6,7 @@ coverage/
 *.log
 .env*
 !.env.example
+backend-java/target/
+*.class
+.vscode/
+.idea/
