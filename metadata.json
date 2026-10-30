@@ -1,0 +1,6 @@
+{
+  "name": "Namma Raitha",
+  "description": "Smart farming platform empowering farmers with AI disease diagnosis, soil health advice, crop calendar alerts, mandi price alerts, agri inputs marketplace, contract farming, and weather forecasts.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

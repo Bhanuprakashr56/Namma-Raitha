@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # 1. MySQL 8 Database Service
+  mysql-db:
+    image: mysql:8.0.36
+    container_name: nammaraitha-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: nammaraitha_db
+      MYSQL_USER: raitha_user
+      MYSQL_PASSWORD: raitha_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./src/main/resources/db/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./src/main/resources/db/data.sql:/docker-entrypoint-initdb.d/02_data.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nammaraitha-net
+
+  # 2. Java 21 Spring Boot 3 Backend Service
+  spring-boot-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nammaraitha-spring-boot
+    restart: always
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/nammaraitha_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: rootpassword
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      APP_JWT_SECRET: NammaRaithaAgriSuperSecretKey2026SecureJWTTokenGeneratorWithHighEntropy256BitsMinimumLength
+      SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+    networks:
+      - nammaraitha-net
+
+  # 3. Optional Database Visualizer (phpMyAdmin)
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: nammaraitha-phpmyadmin
+    restart: always
+    depends_on:
+      - mysql-db
+    environment:
+      PMA_HOST: mysql-db
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: rootpassword
+    ports:
+      - "8081:80"
+    networks:
+      - nammaraitha-net
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  nammaraitha-net:
+    driver: bridge
